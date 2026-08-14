@@ -284,6 +284,45 @@
       background: var(--surface);
       border: 1px solid var(--line);
     }
+    .internal-section {
+      margin-top: 28px;
+    }
+    .internal-section h2 {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+    }
+    .internal-lede {
+      color: var(--muted);
+      margin: 0 0 12px;
+      font-size: 0.9rem;
+      max-width: 75ch;
+    }
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tabs button {
+      font: inherit;
+      font-weight: 650;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+    }
+    .tabs button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    table.internal td.hours-only {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
     .notes {
       color: var(--muted);
       font-size: 0.85rem;
@@ -361,6 +400,22 @@
       <span style="color:var(--ink)">Highlighted rows: Yvonne Lopez and Nadee Guy (PMs)</span>
     </div>
     <div id="matrix-wrap"></div>
+
+    <div class="internal-section">
+      <h2>Notice &amp; Co (internal)</h2>
+      <p class="internal-lede">
+        Uncapped time billed to Diana. Hours only, no budget %. This is not counted in the
+        client totals above. Switch between daily (last 14 days), weekly (last 8 weeks), and
+        monthly (all months in the CSV).
+      </p>
+      <div class="tabs" id="internal-tabs">
+        <button type="button" data-internal-view="daily">Daily</button>
+        <button type="button" data-internal-view="weekly">Weekly</button>
+        <button type="button" class="active" data-internal-view="monthly">Monthly</button>
+      </div>
+      <div id="internal-wrap"></div>
+    </div>
+
     <p class="notes">
       The starting project list (including DMA and Peeple) is built into this file.
       <strong>Manage projects</strong> changes are saved in this browser only, so a new Vercel drop
@@ -373,6 +428,7 @@
     const DEFAULT_CONFIG = [{"name": "AATS", "short": "AATS", "onboarding": "2026-05-14", "onboardingDisplay": "14/5/2026", "budget": 30.58}, {"name": "Baby Sensory", "short": "Baby Sensory", "onboarding": "2026-05-05", "onboardingDisplay": "5/5/2026", "budget": 61.66}, {"name": "DMA Clinical Pilates", "short": "DMA", "onboarding": "2026-08-10", "onboardingDisplay": "10/8/2026", "budget": 5.0}, {"name": "DOTS", "short": "DOTS", "onboarding": "2026-04-15", "onboardingDisplay": "15/4/2026", "budget": 36.66}, {"name": "eVet Guides", "short": "eVet Guides", "onboarding": "2026-04-13", "onboardingDisplay": "13/4/2026", "budget": 29.31}, {"name": "Let's Grow Together - Greenhouse", "short": "Greenhouse", "onboarding": "2026-07-15", "onboardingDisplay": "15/7/2026", "budget": 5.0}, {"name": "Nikita Morell", "short": "Nikita Morell", "onboarding": "2026-06-03", "onboardingDisplay": "3/6/2026", "budget": 5.0}, {"name": "Peeple", "short": "Peeple", "onboarding": "2026-08-06", "onboardingDisplay": "6/8/2026", "budget": 16.66}, {"name": "Ruby Onyx", "short": "Ruby Onyx", "onboarding": "2026-07-02", "onboardingDisplay": "2/7/2026", "budget": 20.5}, {"name": "TEMI", "short": "TEMI", "onboarding": "2026-07-02", "onboardingDisplay": "2/7/2026", "budget": 48.0}, {"name": "The Shearing Shed", "short": "Shearing Shed", "onboarding": "2026-05-18", "onboardingDisplay": "18/5/2026", "budget": 60.0}, {"name": "The Vein Institute", "short": "Vein Institute", "onboarding": "2026-02-18", "onboardingDisplay": "18/2/2026", "budget": 93.33}];
     const PINNED_MEMBERS = ["Yvonne Lopez", "Nadee Guy"];
     const HIGHLIGHT_MEMBERS = ["Yvonne Lopez", "Nadee Guy"];
+    const INTERNAL_PROJECT = "Notice & Co";
     const UPLOAD_KEY = "toptracker-budget-last-upload";
     const PROJECTS_KEY = "toptracker-budget-projects-v2";
     const CSV_CACHE_KEY = "toptracker-budget-csv-cache-v1";
@@ -381,6 +437,8 @@
     let currentProjects = [{"name": "AATS", "short": "AATS", "onboarding": "14/5/2026", "budget": 30.58, "totalHours": 35.53, "totalPct": 116.2, "members": {"Yvonne Lopez": {"hours": 8.74, "pct": 28.6}, "Deanna Notice": {"hours": 1.85, "pct": 6.0}, "Nicky Champ": {"hours": 1.0, "pct": 3.3}, "Korina": {"hours": 7.53, "pct": 24.6}, "Katia Spies": {"hours": 8.05, "pct": 26.3}, "Kristina Chua": {"hours": 8.37, "pct": 27.4}}}, {"name": "Baby Sensory", "short": "Baby Sensory", "onboarding": "5/5/2026", "budget": 61.66, "totalHours": 40.53, "totalPct": 65.7, "members": {"Yvonne Lopez": {"hours": 11.4, "pct": 18.5}, "Korina": {"hours": 11.14, "pct": 18.1}, "Chelsea Dione": {"hours": 10.74, "pct": 17.4}, "Nicky Champ": {"hours": 2.0, "pct": 3.2}, "Katia Spies": {"hours": 4.22, "pct": 6.9}, "Leonie Bricknell": {"hours": 0.13, "pct": 0.2}, "Deanna Notice": {"hours": 0.89, "pct": 1.4}}}, {"name": "DMA Clinical Pilates", "short": "DMA", "onboarding": "10/8/2026", "budget": 5.0, "totalHours": 0.66, "totalPct": 13.3, "members": {"Yvonne Lopez": {"hours": 0.66, "pct": 13.3}}}, {"name": "DOTS", "short": "DOTS", "onboarding": "15/4/2026", "budget": 36.66, "totalHours": 52.74, "totalPct": 143.9, "members": {"Yvonne Lopez": {"hours": 10.76, "pct": 29.3}, "Kristina Chua": {"hours": 23.95, "pct": 65.3}, "Korina": {"hours": 10.67, "pct": 29.1}, "Katia Spies": {"hours": 6.93, "pct": 18.9}, "Deanna Notice": {"hours": 0.44, "pct": 1.2}}}, {"name": "eVet Guides", "short": "eVet Guides", "onboarding": "13/4/2026", "budget": 29.31, "totalHours": 41.03, "totalPct": 140.0, "members": {"Chelsea Dione": {"hours": 17.69, "pct": 60.4}, "Yvonne Lopez": {"hours": 8.3, "pct": 28.3}, "Deanna Notice": {"hours": 1.61, "pct": 5.5}, "Korina": {"hours": 7.82, "pct": 26.7}, "Kristina Chua": {"hours": 1.07, "pct": 3.7}, "Katia Spies": {"hours": 1.37, "pct": 4.7}, "Tracey Smith": {"hours": 3.17, "pct": 10.8}}}, {"name": "Let's Grow Together - Greenhouse", "short": "Greenhouse", "onboarding": "15/7/2026", "budget": 5.0, "totalHours": 1.14, "totalPct": 22.9, "members": {"Yvonne Lopez": {"hours": 0.76, "pct": 15.2}, "Chelsea Dione": {"hours": 0.38, "pct": 7.7}}}, {"name": "Nikita Morell", "short": "Nikita Morell", "onboarding": "3/6/2026", "budget": 5.0, "totalHours": 1.84, "totalPct": 36.8, "members": {"Yvonne Lopez": {"hours": 1.14, "pct": 22.8}, "Chelsea Dione": {"hours": 0.7, "pct": 14.0}}}, {"name": "Peeple", "short": "Peeple", "onboarding": "6/8/2026", "budget": 16.66, "totalHours": 1.06, "totalPct": 6.4, "members": {"Yvonne Lopez": {"hours": 1.06, "pct": 6.4}}}, {"name": "Ruby Onyx", "short": "Ruby Onyx", "onboarding": "2/7/2026", "budget": 20.5, "totalHours": 16.33, "totalPct": 79.7, "members": {"Yvonne Lopez": {"hours": 3.52, "pct": 17.2}, "Deanna Notice": {"hours": 0.06, "pct": 0.3}, "Chelsea Dione": {"hours": 4.72, "pct": 23.0}, "Korina": {"hours": 3.58, "pct": 17.4}, "Katia Spies": {"hours": 4.46, "pct": 21.7}}}, {"name": "TEMI", "short": "TEMI", "onboarding": "2/7/2026", "budget": 48.0, "totalHours": 26.88, "totalPct": 56.0, "members": {"Deanna Notice": {"hours": 12.36, "pct": 25.7}, "Yvonne Lopez": {"hours": 4.74, "pct": 9.9}, "Korina": {"hours": 9.78, "pct": 20.4}}}, {"name": "The Shearing Shed", "short": "Shearing Shed", "onboarding": "18/5/2026", "budget": 60.0, "totalHours": 61.51, "totalPct": 102.5, "members": {"Nadee Guy": {"hours": 13.46, "pct": 22.4}, "Kristina Chua": {"hours": 11.65, "pct": 19.4}, "Nicky Champ": {"hours": 11.5, "pct": 19.2}, "Korina": {"hours": 4.6, "pct": 7.7}, "PM Meetings Notice and Co": {"hours": 1.68, "pct": 2.8}, "Katia Spies": {"hours": 9.88, "pct": 16.5}, "Deanna Notice": {"hours": 3.61, "pct": 6.0}, "Yvonne Lopez": {"hours": 0.17, "pct": 0.3}, "Tracey Smith": {"hours": 4.95, "pct": 8.3}}}, {"name": "The Vein Institute", "short": "Vein Institute", "onboarding": "18/2/2026", "budget": 93.33, "totalHours": 236.43, "totalPct": 253.3, "members": {"Deanna Notice": {"hours": 12.03, "pct": 12.9}, "Yvonne Lopez": {"hours": 37.99, "pct": 40.7}, "Chelsea Dione": {"hours": 80.52, "pct": 86.3}, "Kristina Chua": {"hours": 6.51, "pct": 7.0}, "Korina": {"hours": 47.47, "pct": 50.9}, "Tracey Smith": {"hours": 29.14, "pct": 31.2}, "Katia Spies": {"hours": 22.77, "pct": 24.4}}}];
     let currentSource = "toptracker_2026_08_14_03_22.csv";
     let currentAsOf = "2026-08-14";
+    let internalByDay = {"2026-08-14": {"Yvonne Lopez": 0.22, "Nadee Guy": 0.36}, "2026-08-13": {"Korina": 0.18, "Yvonne Lopez": 0.4, "Nadee Guy": 0.95, "Kristina Chua": 1.3}, "2026-08-12": {"Yvonne Lopez": 0.7, "Nadee Guy": 0.53, "Kristina Chua": 1.05}, "2026-08-11": {"Yvonne Lopez": 0.61, "Nadee Guy": 0.23}, "2026-08-10": {"Yvonne Lopez": 1.86, "Korina": 0.08, "Nadee Guy": 2.71, "Kristina Chua": 2.2}, "2026-08-07": {"Yvonne Lopez": 0.75, "Kristina Chua": 0.09, "Nadee Guy": 0.38}, "2026-08-06": {"Korina": 0.31, "Nadee Guy": 0.24, "Yvonne Lopez": 0.74, "Kristina Chua": 0.32}, "2026-08-05": {"Korina": 0.57, "Yvonne Lopez": 2.25, "Nadee Guy": 1.61, "Kristina Chua": 0.62}, "2026-08-04": {"Nadee Guy": 0.58, "Yvonne Lopez": 0.47}, "2026-08-03": {"Yvonne Lopez": 1.76, "Nadee Guy": 2.91, "Korina": 0.08, "Kristina Chua": 2.2, "Chelsea Dione": 0.24}, "2026-07-31": {"Yvonne Lopez": 1.03, "Nadee Guy": 0.09}, "2026-07-30": {"Yvonne Lopez": 0.91, "Kristina Chua": 0.35, "Nadee Guy": 0.46}, "2026-07-29": {"Yvonne Lopez": 1.16, "Nadee Guy": 1.14}, "2026-07-28": {"Korina": 0.12, "Yvonne Lopez": 0.81, "Nadee Guy": 0.33, "Kristina Chua": 0.28, "Chelsea Dione": 0.07}, "2026-07-27": {"Korina": 0.07, "Yvonne Lopez": 0.7, "Nadee Guy": 2.24, "Kristina Chua": 2.03}, "2026-07-24": {"Kristina Chua": 0.03, "Yvonne Lopez": 1.92, "Nadee Guy": 0.45}, "2026-07-23": {"Korina": 0.01, "Nadee Guy": 0.52, "Yvonne Lopez": 0.4}, "2026-07-22": {"Korina": 0.05, "Nadee Guy": 1.19, "Kristina Chua": 0.08, "Yvonne Lopez": 0.42}, "2026-07-21": {"Nadee Guy": 0.44, "Yvonne Lopez": 1.13, "Chelsea Dione": 0.17}, "2026-07-20": {"Nadee Guy": 2.04, "Yvonne Lopez": 0.66, "Kristina Chua": 2.57}, "2026-07-17": {"Nadee Guy": 0.46, "Kristina Chua": 0.2, "Yvonne Lopez": 0.29}, "2026-07-16": {"Nadee Guy": 0.77, "Kristina Chua": 0.05, "Yvonne Lopez": 0.55, "Korina": 0.02}, "2026-07-15": {"Yvonne Lopez": 0.91, "Nadee Guy": 1.16, "Kristina Chua": 0.06}, "2026-07-14": {"Yvonne Lopez": 2.01, "Chelsea Dione": 0.13}, "2026-07-13": {"Tracey Smith": 0.16, "Nadee Guy": 2.33, "Yvonne Lopez": 2.04, "Kristina Chua": 1.64}, "2026-07-10": {"Yvonne Lopez": 1.82, "Kristina Chua": 0.92, "Nadee Guy": 0.3}, "2026-07-09": {"Yvonne Lopez": 1.76, "Kristina Chua": 0.97, "Nadee Guy": 0.91}, "2026-07-08": {"Tracey Smith": 0.52, "Kristina Chua": 0.07, "Nadee Guy": 0.8, "Yvonne Lopez": 0.83}, "2026-07-07": {"Yvonne Lopez": 2.7, "Nadee Guy": 2.19, "Chelsea Dione": 0.09, "Tracey Smith": 0.13, "Kristina Chua": 1.23}, "2026-07-06": {"Kristina Chua": 0.57, "Yvonne Lopez": 1.69, "Korina": 0.04}, "2026-07-03": {"Yvonne Lopez": 1.19}, "2026-07-02": {"Yvonne Lopez": 1.76, "Nadee Guy": 2.49, "Kristina Chua": 1.19, "Chelsea Dione": 0.3}, "2026-07-01": {"Yvonne Lopez": 4.41, "Nadee Guy": 1.23, "Korina": 0.61, "Chelsea Dione": 0.48, "Kristina Chua": 0.5}, "2026-06-30": {"Kristina Chua": 1.43}, "2026-06-29": {"Kristina Chua": 1.72, "Nadee Guy": 1.11}, "2026-06-26": {"Tracey Smith": 0.01, "Nadee Guy": 0.25}, "2026-06-25": {"Yvonne Lopez": 1.21, "Leonie Bricknell": 3.07, "Nadee Guy": 0.37, "Kristina Chua": 0.35, "Chelsea Dione": 0.18}, "2026-06-24": {"Yvonne Lopez": 2.71, "Leonie Bricknell": 3.8, "Nadee Guy": 1.01, "Kristina Chua": 1.08}, "2026-06-23": {"Yvonne Lopez": 1.75, "Nadee Guy": 0.51, "Leonie Bricknell": 3.9, "Korina": 0.07, "Kristina Chua": 0.11, "Chelsea Dione": 0.17}, "2026-06-22": {"Yvonne Lopez": 1.76, "Leonie Bricknell": 3.45, "Nadee Guy": 1.74, "Kristina Chua": 1.17}, "2026-06-19": {"Yvonne Lopez": 2.05, "Kristina Chua": 0.0, "Nadee Guy": 0.74, "Leonie Bricknell": 3.27}, "2026-06-18": {"Korina": 2.45, "Yvonne Lopez": 1.06, "Leonie Bricknell": 2.35, "Nadee Guy": 0.42, "Chelsea Dione": 0.16, "Kristina Chua": 0.2}, "2026-06-17": {"Yvonne Lopez": 1.15, "Leonie Bricknell": 4.35, "Korina": 0.04, "Nadee Guy": 1.82}, "2026-06-16": {"Yvonne Lopez": 2.14, "Nadee Guy": 1.42, "Leonie Bricknell": 2.37, "Kristina Chua": 0.03}, "2026-06-15": {"Yvonne Lopez": 1.23, "Kristina Chua": 1.02, "Leonie Bricknell": 3.7, "Nadee Guy": 1.5}, "2026-06-12": {"Yvonne Lopez": 2.14, "Korina": 0.13, "Leonie Bricknell": 2.12, "Nadee Guy": 0.39, "Kristina Chua": 0.5}, "2026-06-11": {"Korina": 2.74, "Yvonne Lopez": 1.31, "Leonie Bricknell": 4.78, "Kristina Chua": 0.13, "Nadee Guy": 1.21}, "2026-06-10": {"Korina": 1.03, "Kristina Chua": 1.24, "Yvonne Lopez": 1.84, "Nadee Guy": 1.81, "Chelsea Dione": 0.42}, "2026-06-09": {"Korina": 2.01, "Yvonne Lopez": 2.72, "Nadee Guy": 3.45, "Leonie Bricknell": 4.37, "Kristina Chua": 1.75, "Chelsea Dione": 0.18}, "2026-06-08": {"Korina": 1.78, "Leonie Bricknell": 2.05, "Kristina Chua": 0.1, "Nadee Guy": 0.43}, "2026-06-06": {"Korina": 0.07}, "2026-06-05": {"Nadee Guy": 1.59, "Yvonne Lopez": 1.64, "Leonie Bricknell": 2.62, "Kristina Chua": 1.76}, "2026-06-04": {"Yvonne Lopez": 1.5, "Leonie Bricknell": 3.13, "Nadee Guy": 0.94, "Kristina Chua": 0.42}, "2026-06-03": {"Yvonne Lopez": 2.3, "Nadee Guy": 3.69, "Leonie Bricknell": 4.2, "Kristina Chua": 0.92, "Chelsea Dione": 0.67, "PM Meetings Notice and Co": 0.0}, "2026-06-02": {"Yvonne Lopez": 1.83, "Nadee Guy": 2.35, "Korina": 0.04, "Kristina Chua": 1.0, "Leonie Bricknell": 3.5}, "2026-06-01": {"Yvonne Lopez": 1.94, "Nadee Guy": 2.34, "Kristina Chua": 1.52, "Chelsea Dione": 0.2, "Korina": 0.25, "Leonie Bricknell": 4.45}, "2026-05-31": {"Korina": 0.05}, "2026-05-29": {"Yvonne Lopez": 1.8, "Chelsea Dione": 0.47, "Nadee Guy": 1.05, "Leonie Bricknell": 3.67, "Tracey Smith": 0.21, "Korina": 0.02}, "2026-05-28": {"Korina": 0.05, "Nadee Guy": 0.94, "Leonie Bricknell": 1.05, "Chelsea Dione": 0.22}, "2026-05-27": {"Yvonne Lopez": 2.31, "Nadee Guy": 1.45, "Tracey Smith": 0.11, "Leonie Bricknell": 2.97, "Korina": 0.0}, "2026-05-26": {"Korina": 0.16, "Yvonne Lopez": 1.16, "Nadee Guy": 2.43, "Leonie Bricknell": 3.23, "Tracey Smith": 0.46}, "2026-05-25": {"Korina": 1.31, "Kristina Chua": 0.38, "Yvonne Lopez": 2.19, "Nadee Guy": 0.95, "Leonie Bricknell": 3.2}, "2026-05-22": {"Yvonne Lopez": 0.88, "Leonie Bricknell": 1.92, "Tracey Smith": 0.12, "Kristina Chua": 0.06}, "2026-05-21": {"Yvonne Lopez": 1.91, "Nadee Guy": 0.76, "Kristina Chua": 0.36, "PM Meetings Notice and Co": 0.88, "Korina": 0.3, "Leonie Bricknell": 2.78}, "2026-05-20": {"Nadee Guy": 2.19, "Korina": 0.79, "Leonie Bricknell": 4.27, "Yvonne Lopez": 1.83, "Kristina Chua": 1.35}, "2026-05-19": {"Yvonne Lopez": 1.76, "Nadee Guy": 3.01, "Kristina Chua": 1.75, "Korina": 0.17, "Leonie Bricknell": 2.82}, "2026-05-18": {"Yvonne Lopez": 4.01, "Nadee Guy": 1.98, "Leonie Bricknell": 4.95, "Kristina Chua": 1.25, "Chelsea Dione": 0.61}, "2026-05-16": {"Yvonne Lopez": 0.5}, "2026-05-15": {"Yvonne Lopez": 2.53, "Nadee Guy": 1.58, "Kristina Chua": 0.65, "Leonie Bricknell": 3.93, "Tracey Smith": 0.03}, "2026-05-14": {"Leonie Bricknell": 2.7, "Kristina Chua": 0.43}, "2026-05-13": {"Yvonne Lopez": 2.2, "Nadee Guy": 2.24, "Leonie Bricknell": 3.28, "Korina": 0.17, "Kristina Chua": 0.2}, "2026-05-12": {"Korina": 0.33, "Nadee Guy": 3.04, "Yvonne Lopez": 1.85, "Leonie Bricknell": 3.82, "Kristina Chua": 2.07}, "2026-05-11": {"Nadee Guy": 2.02, "Yvonne Lopez": 2.11, "Leonie Bricknell": 0.97, "Tracey Smith": 0.2, "Kristina Chua": 0.14}, "2026-05-08": {"Tracey Smith": 0.72, "Nadee Guy": 0.95, "Yvonne Lopez": 1.28, "Leonie Bricknell": 2.08}, "2026-05-07": {"Korina": 0.15, "Yvonne Lopez": 2.27, "Leonie Bricknell": 3.48, "Nadee Guy": 0.86, "Kristina Chua": 0.15}, "2026-05-06": {"Nadee Guy": 2.34, "Yvonne Lopez": 2.62, "Leonie Bricknell": 4.92, "Korina": 0.5, "Kristina Chua": 1.02}, "2026-05-05": {"Nadee Guy": 3.46, "Yvonne Lopez": 2.19, "Leonie Bricknell": 4.36, "Kristina Chua": 1.28, "Korina": 0.03, "Chelsea Dione": 1.0}, "2026-05-04": {"Yvonne Lopez": 2.72, "Nadee Guy": 0.87, "Kristina Chua": 0.08}, "2026-05-01": {"Nadee Guy": 0.49, "Kristina Chua": 0.52, "Yvonne Lopez": 1.54, "Leonie Bricknell": 2.55}, "2026-04-30": {"Yvonne Lopez": 3.88, "Leonie Bricknell": 2.7, "Kristina Chua": 0.05, "PM Meetings Notice and Co": 0.59, "Nadee Guy": 1.02}, "2026-04-29": {"Nadee Guy": 1.98, "Yvonne Lopez": 2.17, "Tracey Smith": 1.44, "Leonie Bricknell": 3.58, "Kristina Chua": 0.86}, "2026-04-28": {"Tracey Smith": 1.12, "Nadee Guy": 2.26, "Leonie Bricknell": 4.45, "Kristina Chua": 2.0}, "2026-04-27": {"Yvonne Lopez": 1.71, "Leonie Bricknell": 3.92, "Kristina Chua": 0.25, "Tracey Smith": 0.41}, "2026-04-24": {"Yvonne Lopez": 2.86, "Nadee Guy": 0.88, "Tracey Smith": 0.92, "Leonie Bricknell": 4.13}, "2026-04-23": {"Korina": 0.04, "Yvonne Lopez": 2.02, "Leonie Bricknell": 2.5, "Nadee Guy": 2.14, "Kristina Chua": 0.22}, "2026-04-22": {"Kristina Chua": 0.18, "Korina": 0.2, "Yvonne Lopez": 1.61, "Leonie Bricknell": 3.55, "Tracey Smith": 2.37}, "2026-04-21": {"Yvonne Lopez": 2.76, "Korina": 0.01, "Tracey Smith": 2.99, "Leonie Bricknell": 3.15, "Kristina Chua": 0.06}, "2026-04-20": {"Nadee Guy": 3.58, "Yvonne Lopez": 3.03, "Korina": 0.14, "Leonie Bricknell": 4.13, "Kristina Chua": 2.59}, "2026-04-17": {"Kristina Chua": 0.5, "Korina": 0.33, "Nadee Guy": 0.33, "Yvonne Lopez": 1.78}, "2026-04-16": {"Yvonne Lopez": 1.54, "Nadee Guy": 0.97, "Leonie Bricknell": 2.35, "Kristina Chua": 0.07}, "2026-04-15": {"Nadee Guy": 2.04, "Tracey Smith": 1.74, "Leonie Bricknell": 3.92, "Kristina Chua": 0.71, "Yvonne Lopez": 1.3}, "2026-04-14": {"Yvonne Lopez": 1.58, "Nadee Guy": 2.53, "Leonie Bricknell": 4.4, "Kristina Chua": 2.23, "Tracey Smith": 1.94}, "2026-04-13": {"Korina": 0.21, "Nadee Guy": 1.66, "Yvonne Lopez": 1.39, "Tracey Smith": 0.76, "Leonie Bricknell": 3.07}, "2026-04-10": {"Yvonne Lopez": 1.84, "Nadee Guy": 0.39, "Kristina Chua": 1.18, "Leonie Bricknell": 2.0, "Korina": 0.01}, "2026-04-09": {"Yvonne Lopez": 1.74, "Leonie Bricknell": 1.58, "Kristina Chua": 0.8, "Nadee Guy": 0.21}, "2026-04-08": {"Korina": 0.07, "Kristina Chua": 0.65, "Yvonne Lopez": 2.45, "Nadee Guy": 1.76, "Leonie Bricknell": 3.27}, "2026-04-07": {"Korina": 0.18, "Yvonne Lopez": 1.23, "Nadee Guy": 3.19, "Kristina Chua": 2.29, "Leonie Bricknell": 3.52}, "2026-04-06": {"Kristina Chua": 0.08, "Korina": 0.06}, "2026-04-02": {"Nadee Guy": 0.79, "Yvonne Lopez": 1.13, "Leonie Bricknell": 2.52, "Korina": 0.11, "Kristina Chua": 0.05}, "2026-04-01": {"Korina": 0.72, "Yvonne Lopez": 1.74, "Kristina Chua": 2.11, "Tracey Smith": 1.76, "Nadee Guy": 2.02, "Leonie Bricknell": 4.38}, "2026-03-31": {"Tracey Smith": 0.49, "Korina": 0.1, "Nadee Guy": 3.15, "Kristina Chua": 2.96, "Yvonne Lopez": 0.17, "Leonie Bricknell": 4.07}, "2026-03-30": {"Yvonne Lopez": 1.83, "Korina": 0.21, "Tracey Smith": 0.92, "Kristina Chua": 0.12, "Leonie Bricknell": 3.45}, "2026-03-27": {"Nadee Guy": 0.18, "Yvonne Lopez": 1.14, "Kristina Chua": 0.04, "Leonie Bricknell": 2.13}, "2026-03-26": {"Nadee Guy": 1.67, "Kristina Chua": 1.14, "Tracey Smith": 0.18, "Leonie Bricknell": 2.32, "Yvonne Lopez": 0.25}, "2026-03-25": {"Korina": 0.17, "Nadee Guy": 3.97, "Kristina Chua": 2.4, "Yvonne Lopez": 1.14, "Tracey Smith": 2.2, "Leonie Bricknell": 4.23}, "2026-03-24": {"Kristina Chua": 0.74, "Yvonne Lopez": 0.62, "Nadee Guy": 2.06, "Leonie Bricknell": 3.5}, "2026-03-23": {"Nadee Guy": 1.38, "Yvonne Lopez": 2.53, "Kristina Chua": 0.23, "Tracey Smith": 1.37, "Leonie Bricknell": 3.38}, "2026-03-20": {"Yvonne Lopez": 1.83, "Nadee Guy": 0.85, "Kristina Chua": 0.07, "Leonie Bricknell": 2.12}, "2026-03-19": {"Nadee Guy": 2.02, "Yvonne Lopez": 2.06, "Kristina Chua": 0.84, "Korina": 0.81, "Leonie Bricknell": 3.47}, "2026-03-18": {"Yvonne Lopez": 1.22, "Korina": 0.06, "Nadee Guy": 0.62, "Kristina Chua": 1.57, "Tracey Smith": 2.68, "Leonie Bricknell": 3.03}, "2026-03-17": {"Korina": 0.06, "Yvonne Lopez": 2.01, "Nadee Guy": 0.94, "Tracey Smith": 0.72, "Leonie Bricknell": 2.92}, "2026-03-16": {"Korina": 0.08, "Kristina Chua": 1.59, "Nadee Guy": 3.14, "Yvonne Lopez": 1.47, "Leonie Bricknell": 5.07}, "2026-03-13": {"Yvonne Lopez": 1.23, "Kristina Chua": 0.75, "Nadee Guy": 0.62, "Leonie Bricknell": 3.77}, "2026-03-12": {"Yvonne Lopez": 1.48, "Korina": 0.09, "Kristina Chua": 1.52, "Nadee Guy": 0.6, "Leonie Bricknell": 3.28}, "2026-03-11": {"Yvonne Lopez": 1.5, "Korina": 0.2, "Kristina Chua": 1.62, "Tracey Smith": 0.64, "Nadee Guy": 1.54, "Leonie Bricknell": 3.15}, "2026-03-10": {"Yvonne Lopez": 2.09, "Kristina Chua": 3.38, "Nadee Guy": 2.43, "Tracey Smith": 1.39, "Leonie Bricknell": 5.22}, "2026-03-09": {"Yvonne Lopez": 1.35, "Nadee Guy": 1.5, "Kristina Chua": 1.14, "Leonie Bricknell": 1.8}, "2026-03-06": {"Korina": 0.11, "Yvonne Lopez": 0.93, "Kristina Chua": 1.19, "Nadee Guy": 0.31, "Tracey Smith": 0.02, "Leonie Bricknell": 2.52}, "2026-03-05": {"Yvonne Lopez": 1.17, "Korina": 0.1, "Nadee Guy": 1.08, "Kristina Chua": 1.69, "Leonie Bricknell": 2.95}, "2026-03-04": {"Yvonne Lopez": 2.11, "Tracey Smith": 1.91, "Nadee Guy": 1.65, "Kristina Chua": 2.31, "Korina": 0.5}, "2026-03-03": {"Yvonne Lopez": 0.87, "Nadee Guy": 2.88, "Kristina Chua": 2.34, "Korina": 0.36, "Tracey Smith": 0.83, "Leonie Bricknell": 4.73}, "2026-03-02": {"Tracey Smith": 2.22, "Yvonne Lopez": 1.86, "Nadee Guy": 1.39, "Kristina Chua": 2.16, "Leonie Bricknell": 1.63}, "2026-02-27": {"Kristina Chua": 0.9, "Leonie Bricknell": 1.48, "Yvonne Lopez": 1.64, "Nadee Guy": 0.47}, "2026-02-26": {"Kristina Chua": 0.92, "Nadee Guy": 2.41, "Leonie Bricknell": 2.48, "Yvonne Lopez": 1.24, "Tracey Smith": 0.07}, "2026-02-25": {"Kristina Chua": 2.13, "Yvonne Lopez": 1.09, "Nadee Guy": 1.87, "Leonie Bricknell": 3.77, "Tracey Smith": 2.12}, "2026-02-24": {"Leonie Bricknell": 4.05, "Yvonne Lopez": 1.01, "Nadee Guy": 3.29, "Kristina Chua": 1.65, "Tracey Smith": 1.02, "Deanna Notice": 1.23}, "2026-02-23": {"Yvonne Lopez": 2.29, "Nadee Guy": 0.85, "Leonie Bricknell": 3.23, "Tracey Smith": 1.15, "Korina": 0.08, "Kristina Chua": 1.38}, "2026-02-20": {"Korina": 0.48, "Yvonne Lopez": 1.22, "Leonie Bricknell": 3.53, "Nadee Guy": 0.42, "Kristina Chua": 1.07}, "2026-02-19": {"Yvonne Lopez": 1.13, "Nadee Guy": 1.05, "Leonie Bricknell": 2.2, "Korina": 0.17, "Kristina Chua": 1.97}, "2026-02-18": {"Yvonne Lopez": 1.35, "Nadee Guy": 2.03, "Tracey Smith": 0.78, "Leonie Bricknell": 4.27, "Kristina Chua": 0.1, "Korina": 0.55}, "2026-02-17": {"Korina": 0.47, "Yvonne Lopez": 1.99, "Nadee Guy": 3.54, "Deanna Notice": 1.41, "Leonie Bricknell": 3.92, "Tracey Smith": 0.71, "Kristina Chua": 2.45}, "2026-02-16": {"Yvonne Lopez": 1.93, "Nadee Guy": 0.69, "Korina": 0.47, "Leonie Bricknell": 3.97, "Kristina Chua": 0.84, "Tracey Smith": 0.86}, "2026-02-13": {"Yvonne Lopez": 2.3, "Deanna Notice": 1.06, "Leonie Bricknell": 2.22, "Korina": 0.03, "Nadee Guy": 0.33, "Kristina Chua": 0.86, "Tracey Smith": 0.26}, "2026-02-12": {"Korina": 0.26, "Yvonne Lopez": 1.01, "Nadee Guy": 1.09, "Leonie Bricknell": 1.6, "Kristina Chua": 0.83, "Tracey Smith": 0.04}, "2026-02-11": {"Nadee Guy": 2.16, "Yvonne Lopez": 1.17, "Kristina Chua": 1.25, "Leonie Bricknell": 3.2, "Tracey Smith": 1.3, "Korina": 0.28}, "2026-02-10": {"Yvonne Lopez": 1.72, "Nadee Guy": 3.9, "Korina": 0.22, "Kristina Chua": 3.39, "Leonie Bricknell": 4.43, "Tracey Smith": 0.82}, "2026-02-09": {"Nadee Guy": 1.59, "Tracey Smith": 1.05, "Leonie Bricknell": 3.17, "Yvonne Lopez": 1.55, "Kristina Chua": 1.59, "Korina": 0.08}, "2026-02-07": {"Korina": 0.02}, "2026-02-06": {"Yvonne Lopez": 1.85, "Leonie Bricknell": 2.68, "Korina": 0.14, "Tracey Smith": 0.08, "Kristina Chua": 0.5, "Nadee Guy": 0.14}, "2026-02-05": {"Nadee Guy": 1.96, "Yvonne Lopez": 2.3, "Kristina Chua": 1.56, "Leonie Bricknell": 2.43, "Korina": 0.36}, "2026-02-04": {"Nadee Guy": 2.76, "Yvonne Lopez": 1.59, "Leonie Bricknell": 3.88, "Kristina Chua": 1.86, "Tracey Smith": 2.94}, "2026-02-03": {"Yvonne Lopez": 1.52, "Kristina Chua": 3.11, "Korina": 0.88, "Nadee Guy": 2.26, "Leonie Bricknell": 4.08, "Tracey Smith": 2.37}, "2026-02-02": {"Korina": 1.36, "Yvonne Lopez": 2.78, "Kristina Chua": 0.44, "Nadee Guy": 2.2, "Leonie Bricknell": 2.92, "Tracey Smith": 1.06}, "2026-01-31": {"Korina": 0.04}, "2026-01-30": {"Nadee Guy": 2.29, "Yvonne Lopez": 1.73, "Kristina Chua": 1.83, "Tracey Smith": 0.3, "Leonie Bricknell": 2.7}, "2026-01-29": {"Korina": 0.07, "Nadee Guy": 2.07, "Yvonne Lopez": 1.49, "Tracey Smith": 0.29, "Kristina Chua": 0.5, "Leonie Bricknell": 2.87}, "2026-01-28": {"Korina": 0.18, "Yvonne Lopez": 2.59, "Nadee Guy": 4.58, "Tracey Smith": 1.95, "Kristina Chua": 4.73, "Leonie Bricknell": 6.68}, "2026-01-27": {"Yvonne Lopez": 1.4, "Tracey Smith": 0.5, "Kristina Chua": 0.78, "Leonie Bricknell": 2.53, "Nadee Guy": 0.23}, "2026-01-26": {"Korina": 1.48, "Kristina Chua": 0.03, "Nadee Guy": 0.23}, "2026-01-23": {"Nadee Guy": 0.47, "Yvonne Lopez": 1.62, "Korina": 0.47, "Kristina Chua": 0.89, "Tracey Smith": 0.04, "Leonie Bricknell": 2.52}, "2026-01-22": {"Yvonne Lopez": 1.85, "Nadee Guy": 1.08, "Kristina Chua": 0.67, "Tracey Smith": 0.17, "Leonie Bricknell": 3.42}, "2026-01-21": {"Yvonne Lopez": 0.93, "Nadee Guy": 1.14, "Kristina Chua": 1.74, "Tracey Smith": 0.95, "Deanna Notice": 1.11, "Leonie Bricknell": 5.1}, "2026-01-20": {"Nadee Guy": 3.09, "Tracey Smith": 0.59, "Kristina Chua": 2.79, "Yvonne Lopez": 1.22, "Leonie Bricknell": 3.77}, "2026-01-19": {"Yvonne Lopez": 2.37, "Nadee Guy": 1.37, "Tracey Smith": 1.35, "Kristina Chua": 1.84, "Leonie Bricknell": 2.92}, "2026-01-16": {"Yvonne Lopez": 1.85, "Kristina Chua": 0.05, "Leonie Bricknell": 2.28, "Nadee Guy": 0.14, "Tracey Smith": 0.24}, "2026-01-15": {"Kristina Chua": 0.54, "Yvonne Lopez": 1.64, "Nadee Guy": 0.72, "Tracey Smith": 0.14, "Leonie Bricknell": 2.68}, "2026-01-14": {"Yvonne Lopez": 1.72, "Nadee Guy": 1.16, "Kristina Chua": 0.1, "Tracey Smith": 0.14, "Leonie Bricknell": 3.03}, "2026-01-13": {"Yvonne Lopez": 2.04, "Nadee Guy": 3.28, "Kristina Chua": 2.03, "Tracey Smith": 0.64, "Leonie Bricknell": 4.13}, "2026-01-12": {"Yvonne Lopez": 2.24, "Nadee Guy": 0.14, "Kristina Chua": 1.18, "Korina": 1.0, "Tracey Smith": 1.04, "Leonie Bricknell": 2.47}, "2026-01-09": {"Yvonne Lopez": 1.21, "Nadee Guy": 0.83, "Leonie Bricknell": 2.08, "Kristina Chua": 0.75}, "2026-01-08": {"Yvonne Lopez": 1.79, "Nadee Guy": 0.95, "Kristina Chua": 0.24, "Leonie Bricknell": 2.03}, "2026-01-07": {"Nadee Guy": 2.7, "Yvonne Lopez": 2.02, "Kristina Chua": 1.93, "Leonie Bricknell": 4.88}, "2026-01-06": {"Nadee Guy": 2.08, "Yvonne Lopez": 2.41, "Kristina Chua": 3.33, "Leonie Bricknell": 3.95}, "2026-01-05": {"Kristina Chua": 0.45, "Yvonne Lopez": 2.68, "Nadee Guy": 1.02, "Leonie Bricknell": 0.05}, "2026-01-04": {"Leonie Bricknell": 0.13}};
+    let internalView = "monthly";
     let cachedCsvText = null;
     let cachedCsvName = null;
 
@@ -397,6 +455,52 @@
     function formatDisplayDate(isoDate) {
       const [y, m, d] = isoDate.split("-");
       return `${Number(d)}/${Number(m)}/${y}`;
+    }
+
+    function parseIsoDay(iso) {
+      const [y, m, d] = iso.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function formatIsoDay(dt) {
+      const y = dt.getFullYear();
+      const mo = String(dt.getMonth() + 1).padStart(2, "0");
+      const d = String(dt.getDate()).padStart(2, "0");
+      return `${y}-${mo}-${d}`;
+    }
+
+    function addDays(iso, n) {
+      const dt = parseIsoDay(iso);
+      dt.setDate(dt.getDate() + n);
+      return formatIsoDay(dt);
+    }
+
+    function mondayOf(iso) {
+      const dt = parseIsoDay(iso);
+      const day = dt.getDay();
+      dt.setDate(dt.getDate() + (day === 0 ? -6 : 1 - day));
+      return formatIsoDay(dt);
+    }
+
+    function monthLabel(ym) {
+      const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const [y, m] = ym.split("-");
+      return `${names[Number(m) - 1]} ${y}`;
+    }
+
+    function sortMemberNames(names) {
+      return names.slice().sort((a, b) => {
+        const ai = PINNED_MEMBERS.indexOf(a);
+        const bi = PINNED_MEMBERS.indexOf(b);
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
+        return a.localeCompare(b);
+      });
+    }
+
+    function clientConfig() {
+      return projectConfig.filter((p) => p.name !== INTERNAL_PROJECT);
     }
 
     function formatUploadTime(date) {
@@ -436,10 +540,12 @@
         const raw = localStorage.getItem(PROJECTS_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length) return parsed.map(normalizeProject);
+          if (Array.isArray(parsed) && parsed.length) {
+            return parsed.map(normalizeProject).filter((p) => p.name !== INTERNAL_PROJECT);
+          }
         }
       } catch (err) {}
-      return DEFAULT_CONFIG.map((p) => normalizeProject(p));
+      return DEFAULT_CONFIG.map((p) => normalizeProject(p)).filter((p) => p.name !== INTERNAL_PROJECT);
     }
 
     function saveProjectConfig() {
@@ -591,8 +697,9 @@
     }
 
     function aggregateFromRows(rows) {
-      const byName = Object.fromEntries(projectConfig.map((p) => [p.name, p]));
-      const totals = Object.fromEntries(projectConfig.map((p) => [p.name, {}]));
+      const clients = clientConfig();
+      const byName = Object.fromEntries(clients.map((p) => [p.name, p]));
+      const totals = Object.fromEntries(clients.map((p) => [p.name, {}]));
       let latest = null;
 
       rows.forEach((row) => {
@@ -611,7 +718,7 @@
         totals[projectName][worker] = (totals[projectName][worker] || 0) + secs;
       });
 
-      const projects = projectConfig.map((p) => {
+      const projects = clients.map((p) => {
         const members = {};
         let totalSeconds = 0;
         Object.entries(totals[p.name]).forEach(([member, seconds]) => {
@@ -640,11 +747,26 @@
       };
     }
 
+    function extractInternalFromRows(rows) {
+      const byDay = {};
+      rows.forEach((row) => {
+        if ((row.project || "").trim() !== INTERNAL_PROJECT) return;
+        const day = (row.start_time || "").slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return;
+        const worker = (row.workers || "").trim() || "(unknown)";
+        const hours = (parseInt(row.duration_seconds || "0", 10) || 0) / 3600;
+        if (!byDay[day]) byDay[day] = {};
+        byDay[day][worker] = Math.round(((byDay[day][worker] || 0) + hours) * 100) / 100;
+      });
+      internalByDay = byDay;
+    }
+
     function refreshFromCachedCsv() {
       const cached = loadCachedCsv();
       if (!cached || !cached.text) return false;
       const rows = parseCsv(cached.text.replace(/^\uFEFF/, ""));
       const { projects, asOf } = aggregateFromRows(rows);
+      extractInternalFromRows(rows);
       currentProjects = projects;
       currentSource = cached.fileName || currentSource;
       currentAsOf = asOf;
@@ -655,12 +777,13 @@
       const lede = document.getElementById("lede");
       const overAlert = document.getElementById("over-alert");
       const wrap = document.getElementById("matrix-wrap");
-      const projects = currentProjects;
+      const projects = (currentProjects || []).filter((p) => p.name !== INTERNAL_PROJECT);
 
       if (!projects || !projects.length) {
         lede.textContent = "Upload a TopTracker CSV export to generate the budget matrix.";
         overAlert.classList.add("hidden");
         wrap.innerHTML = `<div class="empty-state">No data yet. Click “Upload TopTracker CSV”.</div>`;
+        renderInternal();
         return;
       }
 
@@ -691,14 +814,7 @@
       PINNED_MEMBERS.forEach((name) => {
         if (!(name in memberTotals)) memberTotals[name] = 0;
       });
-      const members = Object.keys(memberTotals).sort((a, b) => {
-        const ai = PINNED_MEMBERS.indexOf(a);
-        const bi = PINNED_MEMBERS.indexOf(b);
-        if (ai !== -1 && bi !== -1) return ai - bi;
-        if (ai !== -1) return -1;
-        if (bi !== -1) return 1;
-        return a.localeCompare(b);
-      });
+      const members = sortMemberNames(Object.keys(memberTotals));
 
       const headCells = projects.map((p) => {
         const t = tone(p.totalPct);
@@ -734,6 +850,87 @@
         <thead><tr><th class="member-col">Member</th>${headCells}</tr></thead>
         <tbody>${bodyRows}</tbody>
         <tfoot><tr><td class="member-col">Project total</td>${footCells}</tr></tfoot>
+      </table></div>`;
+      renderInternal();
+    }
+
+    function internalColumns() {
+      const days = Object.keys(internalByDay || {}).sort();
+      const asOf = currentAsOf || (days.length ? days[days.length - 1] : formatIsoDay(new Date()));
+      if (internalView === "daily") {
+        const cols = [];
+        for (let i = 13; i >= 0; i--) cols.push(addDays(asOf, -i));
+        return cols.map((key) => ({ key, label: formatDisplayDate(key), days: [key] }));
+      }
+      if (internalView === "weekly") {
+        const endMonday = mondayOf(asOf);
+        const cols = [];
+        for (let i = 7; i >= 0; i--) {
+          const start = addDays(endMonday, -i * 7);
+          const end = addDays(start, 6);
+          cols.push({
+            key: start,
+            label: `${formatDisplayDate(start)}-${formatDisplayDate(end)}`,
+            days: [start, end],
+            range: true,
+          });
+        }
+        return cols;
+      }
+      const months = new Set(days.map((d) => d.slice(0, 7)));
+      if (asOf) months.add(asOf.slice(0, 7));
+      return Array.from(months).sort().map((ym) => ({ key: ym, label: monthLabel(ym), month: true }));
+    }
+
+    function hoursForColumn(member, col) {
+      let total = 0;
+      Object.entries(internalByDay || {}).forEach(([day, members]) => {
+        const match = col.month
+          ? day.slice(0, 7) === col.key
+          : col.range
+            ? day >= col.days[0] && day <= col.days[1]
+            : day === col.key;
+        if (match) total += members[member] || 0;
+      });
+      return Math.round(total * 100) / 100;
+    }
+
+    function renderInternal() {
+      const wrap = document.getElementById("internal-wrap");
+      if (!wrap) return;
+      const days = Object.keys(internalByDay || {});
+      if (!days.length) {
+        wrap.innerHTML = `<div class="empty-state">No Notice &amp; Co time in the uploaded CSV yet.</div>`;
+        return;
+      }
+      const nameSet = new Set(PINNED_MEMBERS);
+      days.forEach((day) => Object.keys(internalByDay[day]).forEach((n) => nameSet.add(n)));
+      const members = sortMemberNames(Array.from(nameSet));
+      const cols = internalColumns();
+      const memberTotals = {};
+      members.forEach((name) => {
+        memberTotals[name] = Math.round(days.reduce((s, day) => s + (internalByDay[day][name] || 0), 0) * 100) / 100;
+      });
+      const grand = members.reduce((s, name) => s + memberTotals[name], 0);
+
+      const head = cols.map((c) => `<th>${c.label}</th>`).join("");
+      const body = members.map((name) => {
+        const cells = cols.map((col) => {
+          const h = hoursForColumn(name, col);
+          return h ? `<td class="hours-only">${fmt(h)}</td>` : `<td class="cell empty">—</td>`;
+        }).join("");
+        const rowClass = HIGHLIGHT_MEMBERS.includes(name) ? ' class="highlight"' : "";
+        return `<tr${rowClass}><td class="member-col">${name}</td>${cells}<td class="hours-only">${fmt(memberTotals[name])}</td></tr>`;
+      }).join("");
+      const foot = cols.map((col) => {
+        const h = members.reduce((s, name) => s + hoursForColumn(name, col), 0);
+        return `<td class="hours-only">${fmt(Math.round(h * 100) / 100)}</td>`;
+      }).join("");
+
+      wrap.innerHTML = `<div class="scroll"><table class="matrix internal">
+        <thead><tr><th class="member-col">Member</th>${head}<th>Total</th></tr></thead>
+        <tbody>${body}</tbody>
+        <tfoot><tr><td class="member-col">Total</td>${foot}<td class="hours-only">${fmt(Math.round(grand * 100) / 100)}</td></tr></tfoot>
       </table></div>`;
     }
 
@@ -787,6 +984,9 @@
       const editIndex = document.getElementById("edit-index").value;
 
       if (!name) return setFormMsg("Enter the project name exactly as it appears in TopTracker.", true);
+      if (name === INTERNAL_PROJECT) {
+        return setFormMsg("Notice & Co is shown in the internal section below, not as a client budget column.", true);
+      }
       if (!onboarding) return setFormMsg("Choose an onboarding date.", true);
       if (!Number.isFinite(budget) || budget < 0) return setFormMsg("Enter budgeted hours as a number.", true);
 
@@ -825,6 +1025,7 @@
           }
           cacheCsv(text, file.name);
           const { projects, asOf } = aggregateFromRows(rows);
+          extractInternalFromRows(rows);
           const uploadedAt = new Date().toISOString();
           currentProjects = projects;
           currentSource = file.name;
@@ -841,6 +1042,15 @@
       reader.readAsText(file);
     }
 
+    document.getElementById("internal-tabs").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-internal-view]");
+      if (!btn) return;
+      internalView = btn.getAttribute("data-internal-view");
+      document.querySelectorAll("#internal-tabs button").forEach((b) => {
+        b.classList.toggle("active", b === btn);
+      });
+      renderInternal();
+    });
     document.getElementById("manage-btn").addEventListener("click", () => {
       const panel = document.getElementById("manage-panel");
       panel.classList.toggle("hidden");
