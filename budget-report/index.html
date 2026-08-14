@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Project time vs budget — TopTracker</title>
+  <style>
+    :root {
+      --bg: #f6f4f1;
+      --surface: #ffffff;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --line: #e7e5e4;
+      --ok: #15803d;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --head: #fafaf9;
+      --sticky: #fafaf9;
+      --accent: #1d4ed8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.4;
+    }
+    .wrap { max-width: 100%; margin: 0 auto; padding: 32px 20px 80px; }
+    .title-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn {
+      font: inherit;
+      font-weight: 650;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-secondary {
+      background: var(--surface);
+      border-color: var(--line);
+      color: var(--ink);
+    }
+    .btn-danger {
+      background: #fff;
+      border-color: #fecaca;
+      color: var(--danger);
+    }
+    .btn-small { padding: 6px 10px; font-size: 0.82rem; }
+    .upload input { display: none; }
+    .upload-status {
+      font-size: 0.82rem;
+      color: var(--muted);
+      max-width: 260px;
+    }
+    .upload-status.error { color: var(--danger); }
+    .last-uploaded {
+      margin: 0 0 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .last-uploaded span { color: var(--muted); font-weight: 500; }
+    .lede {
+      color: var(--muted);
+      margin: 0 0 20px;
+      max-width: 70ch;
+      font-size: 0.95rem;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+    .panel.hidden { display: none; }
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 0.9fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 650;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .field input {
+      width: 100%;
+      font: inherit;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+    }
+    .project-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .project-table th, .project-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+    .project-table th {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .project-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .project-table .row-actions { display: flex; gap: 6px; }
+    .form-msg {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: 0 0 8px;
+    }
+    .form-msg.error { color: var(--danger); }
+    .alert {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #7f1d1d;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      max-width: 960px;
+    }
+    .alert.hidden { display: none; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 14px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .legend .ok::before { background: var(--ok); }
+    .legend .warn::before { background: var(--warn); }
+    .legend .danger::before { background: var(--danger); }
+    .scroll {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+    table.matrix {
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 100%;
+      font-size: 0.82rem;
+    }
+    table.matrix th, table.matrix td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      vertical-align: top;
+      white-space: nowrap;
+    }
+    table.matrix th:last-child, table.matrix td:last-child { border-right: none; }
+    table.matrix tr:last-child td { border-bottom: none; }
+    table.matrix thead th {
+      background: var(--head);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+      font-weight: 650;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    table.matrix thead th.member-col,
+    table.matrix tbody td.member-col {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      text-align: left;
+      background: var(--sticky);
+      min-width: 160px;
+      font-weight: 600;
+      color: var(--ink);
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.85rem;
+    }
+    table.matrix thead th.member-col { z-index: 4; }
+    .proj-name {
+      display: block;
+      color: var(--ink);
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+      margin-bottom: 2px;
+    }
+    .proj-meta {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .proj-pct {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    td.cell {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      min-width: 88px;
+    }
+    td.cell .hours { display: block; font-weight: 600; color: var(--ink); }
+    td.cell .pct {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    td.cell.empty { color: #d6d3d1; text-align: center; }
+    tfoot td {
+      background: #fafaf9;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      border-top: 1px solid var(--line);
+    }
+    tfoot td.member-col { background: #fafaf9; }
+    tfoot td.total { text-align: right; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+    .danger { color: var(--danger); }
+    tr.highlight td { background: #fef3c7; }
+    tr.highlight td.member-col {
+      background: #fde68a;
+      box-shadow: inset 3px 0 0 #d97706;
+    }
+    .empty-state {
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .notes {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 20px;
+      max-width: 75ch;
+    }
+    @media (max-width: 900px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title-row">
+      <h1>Project time vs budget</h1>
+      <div class="actions">
+        <button class="btn btn-secondary" type="button" id="manage-btn">Manage projects</button>
+        <div class="upload">
+          <button class="btn btn-primary" type="button" id="upload-btn">Upload TopTracker CSV</button>
+          <input id="csv-input" type="file" accept=".csv,text/csv" />
+        </div>
+        <div class="upload-status" id="upload-status">Or drop a CSV on this page</div>
+      </div>
+    </div>
+
+    <p class="last-uploaded" id="last-uploaded"><span>No CSV uploaded in this browser yet.</span></p>
+    <p class="lede" id="lede"></p>
+
+    <div class="panel hidden" id="manage-panel">
+      <h2>Projects</h2>
+      <p class="form-msg" id="form-msg">
+        Add a client with its TopTracker project name, onboarding date, and budgeted hours.
+        Names must match TopTracker exactly (e.g. Peeple).
+      </p>
+      <form id="project-form" class="form-grid">
+        <div class="field">
+          <label for="proj-name">Project name</label>
+          <input id="proj-name" type="text" placeholder="Peeple" />
+        </div>
+        <div class="field">
+          <label for="proj-short">Short label</label>
+          <input id="proj-short" type="text" placeholder="Optional" />
+        </div>
+        <div class="field">
+          <label for="proj-onboarding">Onboarding date</label>
+          <input id="proj-onboarding" type="date" />
+        </div>
+        <div class="field">
+          <label for="proj-budget">Budgeted hours</label>
+          <input id="proj-budget" type="number" min="0" step="0.01" placeholder="20" />
+        </div>
+        <button class="btn btn-primary" type="submit" id="save-project-btn">Add project</button>
+        <input type="hidden" id="edit-index" value="" />
+      </form>
+      <div class="scroll">
+        <table class="project-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Onboarding</th>
+              <th class="num">Budget</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="project-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="alert hidden" id="over-alert"></div>
+    <div class="legend">
+      <span class="ok">Under 80% of budget</span>
+      <span class="warn">80–100% of budget</span>
+      <span class="danger">Over budget</span>
+      <span style="color:var(--ink)">Highlighted rows: Yvonne Lopez and Nadee Guy (PMs)</span>
+    </div>
+    <div id="matrix-wrap"></div>
+    <p class="notes">
+      The starting project list (including DMA and Peeple) is built into this file.
+      <strong>Manage projects</strong> changes are saved in this browser only, so a new Vercel drop
+      will use the built-in list again. After adding a project here, upload your TopTracker CSV.
+      Project names must match TopTracker exactly.
+    </p>
+  </div>
+
+  <script>
+    const DEFAULT_CONFIG = [{"name": "AATS", "short": "AATS", "onboarding": "2026-05-14", "onboardingDisplay": "14/5/2026", "budget": 30.58}, {"name": "Baby Sensory", "short": "Baby Sensory", "onboarding": "2026-05-05", "onboardingDisplay": "5/5/2026", "budget": 61.66}, {"name": "DMA Clinical Pilates", "short": "DMA", "onboarding": "2026-08-10", "onboardingDisplay": "10/8/2026", "budget": 5.0}, {"name": "DOTS", "short": "DOTS", "onboarding": "2026-04-15", "onboardingDisplay": "15/4/2026", "budget": 36.66}, {"name": "eVet Guides", "short": "eVet Guides", "onboarding": "2026-04-13", "onboardingDisplay": "13/4/2026", "budget": 29.31}, {"name": "Let's Grow Together - Greenhouse", "short": "Greenhouse", "onboarding": "2026-07-15", "onboardingDisplay": "15/7/2026", "budget": 5.0}, {"name": "Nikita Morell", "short": "Nikita Morell", "onboarding": "2026-06-03", "onboardingDisplay": "3/6/2026", "budget": 5.0}, {"name": "Peeple", "short": "Peeple", "onboarding": "2026-08-06", "onboardingDisplay": "6/8/2026", "budget": 16.66}, {"name": "Ruby Onyx", "short": "Ruby Onyx", "onboarding": "2026-07-02", "onboardingDisplay": "2/7/2026", "budget": 20.5}, {"name": "TEMI", "short": "TEMI", "onboarding": "2026-07-02", "onboardingDisplay": "2/7/2026", "budget": 48.0}, {"name": "The Shearing Shed", "short": "Shearing Shed", "onboarding": "2026-05-18", "onboardingDisplay": "18/5/2026", "budget": 60.0}, {"name": "The Vein Institute", "short": "Vein Institute", "onboarding": "2026-02-18", "onboardingDisplay": "18/2/2026", "budget": 93.33}];
+    const PINNED_MEMBERS = ["Yvonne Lopez", "Nadee Guy"];
+    const UPLOAD_KEY = "toptracker-budget-last-upload";
+    const PROJECTS_KEY = "toptracker-budget-projects-v2";
+    const CSV_CACHE_KEY = "toptracker-budget-csv-cache-v1";
+
+    let projectConfig = loadProjectConfig();
+    let currentProjects = [{"name": "AATS", "short": "AATS", "onboarding": "14/5/2026", "budget": 30.58, "totalHours": 35.53, "totalPct": 116.2, "members": {"Yvonne Lopez": {"hours": 8.74, "pct": 28.6}, "Deanna Notice": {"hours": 1.85, "pct": 6.0}, "Nicky Champ": {"hours": 1.0, "pct": 3.3}, "Korina": {"hours": 7.53, "pct": 24.6}, "Katia Spies": {"hours": 8.05, "pct": 26.3}, "Kristina Chua": {"hours": 8.37, "pct": 27.4}}}, {"name": "Baby Sensory", "short": "Baby Sensory", "onboarding": "5/5/2026", "budget": 61.66, "totalHours": 40.53, "totalPct": 65.7, "members": {"Yvonne Lopez": {"hours": 11.4, "pct": 18.5}, "Korina": {"hours": 11.14, "pct": 18.1}, "Chelsea Dione": {"hours": 10.74, "pct": 17.4}, "Nicky Champ": {"hours": 2.0, "pct": 3.2}, "Katia Spies": {"hours": 4.22, "pct": 6.9}, "Leonie Bricknell": {"hours": 0.13, "pct": 0.2}, "Deanna Notice": {"hours": 0.89, "pct": 1.4}}}, {"name": "DMA Clinical Pilates", "short": "DMA", "onboarding": "10/8/2026", "budget": 5.0, "totalHours": 0.66, "totalPct": 13.3, "members": {"Yvonne Lopez": {"hours": 0.66, "pct": 13.3}}}, {"name": "DOTS", "short": "DOTS", "onboarding": "15/4/2026", "budget": 36.66, "totalHours": 52.74, "totalPct": 143.9, "members": {"Yvonne Lopez": {"hours": 10.76, "pct": 29.3}, "Kristina Chua": {"hours": 23.95, "pct": 65.3}, "Korina": {"hours": 10.67, "pct": 29.1}, "Katia Spies": {"hours": 6.93, "pct": 18.9}, "Deanna Notice": {"hours": 0.44, "pct": 1.2}}}, {"name": "eVet Guides", "short": "eVet Guides", "onboarding": "13/4/2026", "budget": 29.31, "totalHours": 41.03, "totalPct": 140.0, "members": {"Chelsea Dione": {"hours": 17.69, "pct": 60.4}, "Yvonne Lopez": {"hours": 8.3, "pct": 28.3}, "Deanna Notice": {"hours": 1.61, "pct": 5.5}, "Korina": {"hours": 7.82, "pct": 26.7}, "Kristina Chua": {"hours": 1.07, "pct": 3.7}, "Katia Spies": {"hours": 1.37, "pct": 4.7}, "Tracey Smith": {"hours": 3.17, "pct": 10.8}}}, {"name": "Let's Grow Together - Greenhouse", "short": "Greenhouse", "onboarding": "15/7/2026", "budget": 5.0, "totalHours": 1.14, "totalPct": 22.9, "members": {"Yvonne Lopez": {"hours": 0.76, "pct": 15.2}, "Chelsea Dione": {"hours": 0.38, "pct": 7.7}}}, {"name": "Nikita Morell", "short": "Nikita Morell", "onboarding": "3/6/2026", "budget": 5.0, "totalHours": 1.84, "totalPct": 36.8, "members": {"Yvonne Lopez": {"hours": 1.14, "pct": 22.8}, "Chelsea Dione": {"hours": 0.7, "pct": 14.0}}}, {"name": "Peeple", "short": "Peeple", "onboarding": "6/8/2026", "budget": 16.66, "totalHours": 1.06, "totalPct": 6.4, "members": {"Yvonne Lopez": {"hours": 1.06, "pct": 6.4}}}, {"name": "Ruby Onyx", "short": "Ruby Onyx", "onboarding": "2/7/2026", "budget": 20.5, "totalHours": 16.33, "totalPct": 79.7, "members": {"Yvonne Lopez": {"hours": 3.52, "pct": 17.2}, "Deanna Notice": {"hours": 0.06, "pct": 0.3}, "Chelsea Dione": {"hours": 4.72, "pct": 23.0}, "Korina": {"hours": 3.58, "pct": 17.4}, "Katia Spies": {"hours": 4.46, "pct": 21.7}}}, {"name": "TEMI", "short": "TEMI", "onboarding": "2/7/2026", "budget": 48.0, "totalHours": 26.88, "totalPct": 56.0, "members": {"Deanna Notice": {"hours": 12.36, "pct": 25.7}, "Yvonne Lopez": {"hours": 4.74, "pct": 9.9}, "Korina": {"hours": 9.78, "pct": 20.4}}}, {"name": "The Shearing Shed", "short": "Shearing Shed", "onboarding": "18/5/2026", "budget": 60.0, "totalHours": 61.51, "totalPct": 102.5, "members": {"Nadee Guy": {"hours": 13.46, "pct": 22.4}, "Kristina Chua": {"hours": 11.65, "pct": 19.4}, "Nicky Champ": {"hours": 11.5, "pct": 19.2}, "Korina": {"hours": 4.6, "pct": 7.7}, "PM Meetings Notice and Co": {"hours": 1.68, "pct": 2.8}, "Katia Spies": {"hours": 9.88, "pct": 16.5}, "Deanna Notice": {"hours": 3.61, "pct": 6.0}, "Yvonne Lopez": {"hours": 0.17, "pct": 0.3}, "Tracey Smith": {"hours": 4.95, "pct": 8.3}}}, {"name": "The Vein Institute", "short": "Vein Institute", "onboarding": "18/2/2026", "budget": 93.33, "totalHours": 236.43, "totalPct": 253.3, "members": {"Deanna Notice": {"hours": 12.03, "pct": 12.9}, "Yvonne Lopez": {"hours": 37.99, "pct": 40.7}, "Chelsea Dione": {"hours": 80.52, "pct": 86.3}, "Kristina Chua": {"hours": 6.51, "pct": 7.0}, "Korina": {"hours": 47.47, "pct": 50.9}, "Tracey Smith": {"hours": 29.14, "pct": 31.2}, "Katia Spies": {"hours": 22.77, "pct": 24.4}}}];
+    let currentSource = "toptracker_2026_08_14_03_22.csv";
+    let currentAsOf = "2026-08-14";
+    let cachedCsvText = null;
+    let cachedCsvName = null;
+
+    function tone(pct) {
+      if (pct > 100) return "danger";
+      if (pct >= 80) return "warn";
+      return "ok";
+    }
+
+    function fmt(h) {
+      return Number(h).toFixed(2) + "h";
+    }
+
+    function formatDisplayDate(isoDate) {
+      const [y, m, d] = isoDate.split("-");
+      return `${Number(d)}/${Number(m)}/${y}`;
+    }
+
+    function formatUploadTime(date) {
+      return date.toLocaleString(undefined, {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    }
+
+    function toIsoDate(value) {
+      if (!value) return "";
+      const s = String(value).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (!m) return "";
+      return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+    }
+
+    function normalizeProject(p) {
+      const onboarding = toIsoDate(p.onboarding || p.onboardingDisplay || "");
+      return {
+        name: p.name,
+        short: p.short || p.name,
+        onboarding,
+        onboardingDisplay: p.onboardingDisplay || (onboarding ? formatDisplayDate(onboarding) : ""),
+        budget: Number(p.budget) || 0,
+      };
+    }
+
+    function loadProjectConfig() {
+      try {
+        const raw = localStorage.getItem(PROJECTS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length) return parsed.map(normalizeProject);
+        }
+      } catch (err) {}
+      return DEFAULT_CONFIG.map((p) => normalizeProject(p));
+    }
+
+    function saveProjectConfig() {
+      const payload = JSON.stringify(projectConfig);
+      try {
+        localStorage.setItem(PROJECTS_KEY, payload);
+        return true;
+      } catch (err) {
+        try {
+          localStorage.removeItem(CSV_CACHE_KEY);
+          localStorage.setItem(PROJECTS_KEY, payload);
+          return true;
+        } catch (err2) {
+          return false;
+        }
+      }
+    }
+
+    function applyConfigToMatrix() {
+      currentProjects = projectConfig.map((p) => {
+        const existing = (currentProjects || []).find((x) => x.name === p.name);
+        if (!existing) {
+          return {
+            name: p.name,
+            short: p.short,
+            onboarding: p.onboardingDisplay,
+            budget: p.budget,
+            totalHours: 0,
+            totalPct: 0,
+            members: {},
+          };
+        }
+        const budget = p.budget;
+        const totalHours = existing.totalHours || 0;
+        const members = {};
+        Object.entries(existing.members || {}).forEach(([name, data]) => {
+          members[name] = {
+            hours: data.hours,
+            pct: budget ? Math.round((data.hours / budget) * 1000) / 10 : 0,
+          };
+        });
+        return {
+          ...existing,
+          name: p.name,
+          short: p.short,
+          onboarding: p.onboardingDisplay,
+          budget,
+          totalHours,
+          totalPct: budget ? Math.round((totalHours / budget) * 1000) / 10 : 0,
+          members,
+        };
+      });
+    }
+
+    function updateLastUploadedLabel(fileName, uploadedAt) {
+      const el = document.getElementById("last-uploaded");
+      if (!uploadedAt) {
+        el.innerHTML = "<span>No CSV uploaded in this browser yet.</span>";
+        return;
+      }
+      const when = formatUploadTime(new Date(uploadedAt));
+      const fileBit = fileName ? ` · ${fileName}` : "";
+      el.innerHTML = `Last uploaded: ${when}<span>${fileBit}</span>`;
+    }
+
+    function saveUploadMeta(fileName, uploadedAt) {
+      try {
+        localStorage.setItem(UPLOAD_KEY, JSON.stringify({ fileName, uploadedAt }));
+      } catch (err) {}
+    }
+
+    function loadUploadMeta() {
+      try {
+        const raw = localStorage.getItem(UPLOAD_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function cacheCsv(text, fileName) {
+      cachedCsvText = text;
+      cachedCsvName = fileName;
+      try {
+        localStorage.setItem(CSV_CACHE_KEY, JSON.stringify({ text, fileName }));
+      } catch (err) {
+        // CSV may be too large for localStorage; in-memory cache still works this session.
+      }
+    }
+
+    function loadCachedCsv() {
+      if (cachedCsvText) return { text: cachedCsvText, fileName: cachedCsvName };
+      try {
+        const raw = localStorage.getItem(CSV_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        cachedCsvText = parsed.text;
+        cachedCsvName = parsed.fileName;
+        return parsed;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function setStatus(message, isError) {
+      const el = document.getElementById("upload-status");
+      el.textContent = message;
+      el.classList.toggle("error", !!isError);
+    }
+
+    function setFormMsg(message, isError) {
+      const el = document.getElementById("form-msg");
+      el.textContent = message;
+      el.classList.toggle("error", !!isError);
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+        if (inQuotes) {
+          if (ch === '"' && next === '"') { field += '"'; i++; }
+          else if (ch === '"') inQuotes = false;
+          else field += ch;
+        } else if (ch === '"') {
+          inQuotes = true;
+        } else if (ch === ",") {
+          row.push(field); field = "";
+        } else if (ch === "\n") {
+          row.push(field); rows.push(row); row = []; field = "";
+        } else if (ch !== "\r") {
+          field += ch;
+        }
+      }
+      if (field.length || row.length) { row.push(field); rows.push(row); }
+      if (!rows.length) return [];
+      const headers = rows[0].map((h) => h.trim());
+      return rows.slice(1)
+        .filter((r) => r.some((cell) => cell && cell.trim()))
+        .map((r) => {
+          const obj = {};
+          headers.forEach((h, idx) => { obj[h] = (r[idx] || "").trim(); });
+          return obj;
+        });
+    }
+
+    function aggregateFromRows(rows) {
+      const byName = Object.fromEntries(projectConfig.map((p) => [p.name, p]));
+      const totals = Object.fromEntries(projectConfig.map((p) => [p.name, {}]));
+      let latest = null;
+
+      rows.forEach((row) => {
+        const projectName = (row.project || "").trim();
+        if (!byName[projectName]) return;
+        const startRaw = row.start_time || "";
+        const day = startRaw.slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return;
+        if (day < byName[projectName].onboarding) return;
+        const start = new Date(startRaw);
+        if (!latest || (!Number.isNaN(start.getTime()) && start > latest.start)) {
+          latest = { start, day };
+        }
+        const worker = (row.workers || "").trim() || "(unknown)";
+        const secs = parseInt(row.duration_seconds || "0", 10) || 0;
+        totals[projectName][worker] = (totals[projectName][worker] || 0) + secs;
+      });
+
+      const projects = projectConfig.map((p) => {
+        const members = {};
+        let totalSeconds = 0;
+        Object.entries(totals[p.name]).forEach(([member, seconds]) => {
+          const hours = seconds / 3600;
+          totalSeconds += seconds;
+          members[member] = {
+            hours: Math.round(hours * 100) / 100,
+            pct: p.budget ? Math.round((hours / p.budget) * 1000) / 10 : 0,
+          };
+        });
+        const totalHours = totalSeconds / 3600;
+        return {
+          name: p.name,
+          short: p.short,
+          onboarding: p.onboardingDisplay,
+          budget: p.budget,
+          totalHours: Math.round(totalHours * 100) / 100,
+          totalPct: p.budget ? Math.round((totalHours / p.budget) * 1000) / 10 : 0,
+          members,
+        };
+      });
+
+      return {
+        projects,
+        asOf: latest ? latest.day : new Date().toISOString().slice(0, 10),
+      };
+    }
+
+    function refreshFromCachedCsv() {
+      const cached = loadCachedCsv();
+      if (!cached || !cached.text) return false;
+      const rows = parseCsv(cached.text.replace(/^\uFEFF/, ""));
+      const { projects, asOf } = aggregateFromRows(rows);
+      currentProjects = projects;
+      currentSource = cached.fileName || currentSource;
+      currentAsOf = asOf;
+      return true;
+    }
+
+    function renderMatrix() {
+      const lede = document.getElementById("lede");
+      const overAlert = document.getElementById("over-alert");
+      const wrap = document.getElementById("matrix-wrap");
+      const projects = currentProjects;
+
+      if (!projects || !projects.length) {
+        lede.textContent = "Upload a TopTracker CSV export to generate the budget matrix.";
+        overAlert.classList.add("hidden");
+        wrap.innerHTML = `<div class="empty-state">No data yet. Click “Upload TopTracker CSV”.</div>`;
+        return;
+      }
+
+      const totalSpent = projects.reduce((s, p) => s + p.totalHours, 0);
+      const totalBudget = projects.reduce((s, p) => s + p.budget, 0);
+      const overallPct = totalBudget ? (totalSpent / totalBudget) * 100 : 0;
+      lede.textContent =
+        `Source: ${currentSource}. Hours counted from each project’s onboarding date through ${currentAsOf}. ` +
+        `Each cell shows hours spent and that member’s % of the project budget. ` +
+        `Overall: ${totalSpent.toFixed(2)}h spent of ${totalBudget.toFixed(2)}h budgeted (${overallPct.toFixed(0)}%).`;
+
+      const over = projects.filter((p) => p.totalPct > 100);
+      if (over.length) {
+        overAlert.classList.remove("hidden");
+        overAlert.innerHTML =
+          "<strong>Over budget:</strong> " +
+          over.map((p) => `${p.name} (${p.totalPct.toFixed(0)}%)`).join(", ");
+      } else {
+        overAlert.classList.add("hidden");
+      }
+
+      const memberTotals = {};
+      projects.forEach((p) => {
+        Object.entries(p.members).forEach(([name, data]) => {
+          memberTotals[name] = (memberTotals[name] || 0) + data.hours;
+        });
+      });
+      PINNED_MEMBERS.forEach((name) => {
+        if (!(name in memberTotals)) memberTotals[name] = 0;
+      });
+      const members = Object.keys(memberTotals).sort((a, b) => {
+        const ai = PINNED_MEMBERS.indexOf(a);
+        const bi = PINNED_MEMBERS.indexOf(b);
+        if (ai !== -1 && bi !== -1) return ai - bi;
+        if (ai !== -1) return -1;
+        if (bi !== -1) return 1;
+        return a.localeCompare(b);
+      });
+
+      const headCells = projects.map((p) => {
+        const t = tone(p.totalPct);
+        return `<th title="${p.name}">
+          <span class="proj-name">${p.short}</span>
+          <span class="proj-meta">${p.onboarding} · budget ${fmt(p.budget)}</span>
+          <span class="proj-pct ${t}">${p.totalPct.toFixed(1)}% used · ${fmt(p.totalHours)}</span>
+        </th>`;
+      }).join("");
+
+      const bodyRows = members.map((name) => {
+        const cells = projects.map((p) => {
+          const data = p.members[name];
+          if (!data) return `<td class="cell empty">—</td>`;
+          return `<td class="cell">
+            <span class="hours">${fmt(data.hours)}</span>
+            <span class="pct">${data.pct.toFixed(1)}% of budget</span>
+          </td>`;
+        }).join("");
+        const rowClass = PINNED_MEMBERS.includes(name) ? ' class="highlight"' : "";
+        return `<tr${rowClass}>
+          <td class="member-col">${name}</td>
+          ${cells}
+        </tr>`;
+      }).join("");
+
+      const footCells = projects.map((p) => {
+        const t = tone(p.totalPct);
+        return `<td class="total ${t}">${fmt(p.totalHours)}<br><span style="font-weight:600;font-size:0.75rem">${p.totalPct.toFixed(1)}%</span></td>`;
+      }).join("");
+
+      wrap.innerHTML = `<div class="scroll"><table class="matrix">
+        <thead><tr><th class="member-col">Member</th>${headCells}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot><tr><td class="member-col">Project total</td>${footCells}</tr></tfoot>
+      </table></div>`;
+    }
+
+    function renderProjectList() {
+      const body = document.getElementById("project-list");
+      body.innerHTML = projectConfig.map((p, idx) => `
+        <tr>
+          <td>${p.name}${p.short !== p.name ? ` <span style="color:var(--muted)">(${p.short})</span>` : ""}</td>
+          <td>${p.onboardingDisplay}</td>
+          <td class="num">${fmt(p.budget)}</td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-secondary btn-small" type="button" data-edit="${idx}">Edit</button>
+              <button class="btn btn-danger btn-small" type="button" data-delete="${idx}">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetProjectForm() {
+      document.getElementById("proj-name").value = "";
+      document.getElementById("proj-short").value = "";
+      document.getElementById("proj-onboarding").value = "";
+      document.getElementById("proj-budget").value = "";
+      document.getElementById("edit-index").value = "";
+      document.getElementById("save-project-btn").textContent = "Add project";
+    }
+
+    function afterProjectChange() {
+      const saved = saveProjectConfig();
+      renderProjectList();
+      const refreshed = refreshFromCachedCsv();
+      if (!refreshed) applyConfigToMatrix();
+      renderMatrix();
+      if (!saved) {
+        setFormMsg("Could not save in this browser (storage is full). The date will revert when you refresh.", true);
+      } else if (refreshed) {
+        setFormMsg("Project list updated. Hours refreshed from your last uploaded CSV.");
+      } else {
+        setFormMsg("Project saved. Re-upload your TopTracker CSV to recount hours from the new onboarding date.");
+      }
+    }
+
+    function saveProject() {
+      const name = document.getElementById("proj-name").value.trim();
+      const short = document.getElementById("proj-short").value.trim() || name;
+      const onboarding = document.getElementById("proj-onboarding").value;
+      const budgetRaw = document.getElementById("proj-budget").value;
+      const budget = Number(budgetRaw);
+      const editIndex = document.getElementById("edit-index").value;
+
+      if (!name) return setFormMsg("Enter the project name exactly as it appears in TopTracker.", true);
+      if (!onboarding) return setFormMsg("Choose an onboarding date.", true);
+      if (!Number.isFinite(budget) || budget < 0) return setFormMsg("Enter budgeted hours as a number.", true);
+
+      const duplicate = projectConfig.findIndex((p, idx) =>
+        p.name.toLowerCase() === name.toLowerCase() && String(idx) !== editIndex
+      );
+      if (duplicate >= 0) return setFormMsg("That project name is already in the list.", true);
+
+      const item = {
+        name,
+        short,
+        onboarding,
+        onboardingDisplay: formatDisplayDate(onboarding),
+        budget,
+      };
+
+      if (editIndex === "") projectConfig.push(item);
+      else projectConfig[Number(editIndex)] = item;
+
+      projectConfig.sort((a, b) => a.name.localeCompare(b.name));
+      resetProjectForm();
+      afterProjectChange();
+    }
+
+    function handleFile(file) {
+      if (!file) return;
+      setStatus(`Reading ${file.name}…`);
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const text = String(reader.result || "").replace(/^\uFEFF/, "");
+          const rows = parseCsv(text);
+          if (!rows.length) throw new Error("CSV looks empty.");
+          if (!("project" in rows[0]) || !("start_time" in rows[0]) || !("duration_seconds" in rows[0])) {
+            throw new Error("Not a TopTracker CSV. Need project, start_time, duration_seconds.");
+          }
+          cacheCsv(text, file.name);
+          const { projects, asOf } = aggregateFromRows(rows);
+          const uploadedAt = new Date().toISOString();
+          currentProjects = projects;
+          currentSource = file.name;
+          currentAsOf = asOf;
+          saveUploadMeta(file.name, uploadedAt);
+          updateLastUploadedLabel(file.name, uploadedAt);
+          renderMatrix();
+          setStatus(`Loaded ${file.name} at ${formatUploadTime(new Date(uploadedAt))}`);
+        } catch (err) {
+          setStatus(err.message || "Could not read that file.", true);
+        }
+      };
+      reader.onerror = () => setStatus("Could not read that file.", true);
+      reader.readAsText(file);
+    }
+
+    document.getElementById("manage-btn").addEventListener("click", () => {
+      const panel = document.getElementById("manage-panel");
+      panel.classList.toggle("hidden");
+    });
+    document.getElementById("project-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      saveProject();
+    });
+    document.getElementById("project-list").addEventListener("click", (e) => {
+      const editBtn = e.target.closest("[data-edit]");
+      const deleteBtn = e.target.closest("[data-delete]");
+      if (editBtn) {
+        const idx = Number(editBtn.getAttribute("data-edit"));
+        const p = projectConfig[idx];
+        document.getElementById("proj-name").value = p.name;
+        document.getElementById("proj-short").value = p.short === p.name ? "" : p.short;
+        document.getElementById("proj-onboarding").value = toIsoDate(p.onboarding);
+        document.getElementById("proj-budget").value = p.budget;
+        document.getElementById("edit-index").value = String(idx);
+        document.getElementById("save-project-btn").textContent = "Save changes";
+        setFormMsg(`Editing ${p.name}. Update the fields and click Save changes.`);
+      }
+      if (deleteBtn) {
+        const idx = Number(deleteBtn.getAttribute("data-delete"));
+        const p = projectConfig[idx];
+        if (!confirm(`Remove ${p.name} from this dashboard?`)) return;
+        projectConfig.splice(idx, 1);
+        resetProjectForm();
+        afterProjectChange();
+      }
+    });
+
+    const uploadBtn = document.getElementById("upload-btn");
+    const csvInput = document.getElementById("csv-input");
+    uploadBtn.addEventListener("click", () => csvInput.click());
+    csvInput.addEventListener("change", () => {
+      handleFile(csvInput.files && csvInput.files[0]);
+      csvInput.value = "";
+    });
+    ["dragenter", "dragover"].forEach((evt) => {
+      window.addEventListener(evt, (e) => { e.preventDefault(); setStatus("Drop CSV to upload"); });
+    });
+    window.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    const savedUpload = loadUploadMeta();
+    if (savedUpload && savedUpload.uploadedAt) {
+      updateLastUploadedLabel(savedUpload.fileName, savedUpload.uploadedAt);
+    }
+    loadCachedCsv();
+    if (cachedCsvText) refreshFromCachedCsv();
+    else applyConfigToMatrix();
+    renderProjectList();
+    renderMatrix();
+  </script>
+</body>
+</html>
