@@ -269,6 +269,19 @@
     }
     tfoot td.member-col { background: #fafaf9; }
     tfoot td.total { text-align: right; }
+    tfoot tr.budget-mark td {
+      background: #eff6ff;
+      font-weight: 650;
+      color: #1e3a8a;
+    }
+    tfoot tr.budget-mark td.member-col { background: #dbeafe; }
+    tfoot tr.budget-mark .need {
+      display: block;
+      margin-top: 2px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: #1d4ed8;
+    }
     .ok { color: var(--ok); }
     .warn { color: var(--warn); }
     .danger { color: var(--danger); }
@@ -939,10 +952,22 @@
         return `<td class="total ${t}">${fmt(p.totalHours)}<br><span style="font-weight:600;font-size:0.75rem">${p.totalPct.toFixed(1)}%</span></td>`;
       }).join("");
 
+      const quarterCells = projects.map((p) => {
+        const target = p.budget * 0.25;
+        const remaining = Math.max(0, target - p.totalHours);
+        const need = remaining > 0.005
+          ? `${fmt(remaining)} still needed`
+          : "25% reached";
+        return `<td class="total">${fmt(target)}<span class="need">${need}</span></td>`;
+      }).join("");
+
       wrap.innerHTML = `<div class="scroll"><table class="matrix">
         <thead><tr><th class="member-col">Member</th>${headCells}</tr></thead>
         <tbody>${bodyRows}</tbody>
-        <tfoot><tr><td class="member-col">Project total</td>${footCells}</tr></tfoot>
+        <tfoot>
+          <tr class="budget-mark"><td class="member-col">25% of budget</td>${quarterCells}</tr>
+          <tr><td class="member-col">Project total</td>${footCells}</tr>
+        </tfoot>
       </table></div>`;
       renderInternal();
     }
