@@ -1058,9 +1058,9 @@
         wrap.innerHTML = `<div class="empty-state">No Notice &amp; Co time in the uploaded CSV yet.</div>`;
         return;
       }
-      const nameSet = new Set(PINNED_MEMBERS);
+      const nameSet = new Set();
       days.forEach((day) => Object.keys(internalByDay[day]).forEach((n) => nameSet.add(n)));
-      const members = sortMemberNames(Array.from(nameSet));
+      const members = Array.from(nameSet).sort((a, b) => a.localeCompare(b));
       const cols = internalColumns();
       const memberTotals = {};
       members.forEach((name) => {
@@ -1080,8 +1080,7 @@
             ? `<td class="hours-only" data-kind="cell" data-member="${escapeAttr(name)}" data-col="${idx}">${fmtSecs(secs)}</td>`
             : `<td class="cell empty">—</td>`;
         }).join("");
-        const rowClass = HIGHLIGHT_MEMBERS.includes(name) ? ' class="highlight"' : "";
-        return `<tr${rowClass}><td class="member-col">${name}</td>${cells}<td class="hours-only clickable" data-kind="row" data-member="${escapeAttr(name)}">${fmtSecs(memberTotals[name])}</td></tr>`;
+        return `<tr><td class="member-col">${name}</td>${cells}<td class="hours-only clickable" data-kind="row" data-member="${escapeAttr(name)}">${fmtSecs(memberTotals[name])}</td></tr>`;
       }).join("");
       const foot = colTotals.map((secs, idx) => `<td class="hours-only clickable" data-kind="col" data-col="${idx}">${fmtSecs(secs)}</td>`).join("");
 
