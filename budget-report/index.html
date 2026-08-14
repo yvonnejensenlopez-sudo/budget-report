@@ -893,7 +893,7 @@
       const overallPct = totalBudget ? (totalSpent / totalBudget) * 100 : 0;
       lede.textContent =
         `Source: ${currentSource}. Hours counted from each project’s onboarding date through ${currentAsOf}. ` +
-        `Each cell shows hours spent / 25% of the project budget. ` +
+        `Each cell shows hours spent and that member’s % of the project budget. ` +
         `Overall: ${totalSpent.toFixed(2)}h spent of ${totalBudget.toFixed(2)}h budgeted (${overallPct.toFixed(0)}%).`;
 
       const over = projects.filter((p) => p.totalPct > 100);
@@ -931,7 +931,8 @@
           const data = p.members[name];
           if (!data) return `<td class="cell empty">—</td>`;
           return `<td class="cell">
-            <span class="hours">${fmt(data.hours)} / ${fmt(p.budget * 0.25)}</span>
+            <span class="hours">${fmt(data.hours)}</span>
+            <span class="pct">${data.pct.toFixed(1)}% of budget</span>
           </td>`;
         }).join("");
         const rowClass = HIGHLIGHT_MEMBERS.includes(name) ? ' class="highlight"' : "";
