@@ -269,13 +269,15 @@
     }
     tfoot td.member-col { background: #fafaf9; }
     tfoot td.total { text-align: right; }
-    tfoot tr.budget-mark td {
+    tr.budget-mark td {
       background: #eff6ff;
       font-weight: 650;
       color: #1e3a8a;
     }
-    tfoot tr.budget-mark td.member-col { background: #dbeafe; }
-    tfoot tr.budget-mark .need {
+    table.matrix tbody tr.budget-mark td.member-col {
+      background: #dbeafe;
+    }
+    tr.budget-mark .need {
       display: block;
       margin-top: 2px;
       font-weight: 600;
@@ -958,16 +960,16 @@
         const need = remaining > 0.005
           ? `${fmt(remaining)} still needed`
           : "25% reached";
-        return `<td class="total">${fmt(target)}<span class="need">${need}</span></td>`;
+        return `<td class="cell">${fmt(target)}<span class="need">${need}</span></td>`;
       }).join("");
 
       wrap.innerHTML = `<div class="scroll"><table class="matrix">
         <thead><tr><th class="member-col">Member</th>${headCells}</tr></thead>
-        <tbody>${bodyRows}</tbody>
-        <tfoot>
+        <tbody>
           <tr class="budget-mark"><td class="member-col">25% of budget</td>${quarterCells}</tr>
-          <tr><td class="member-col">Project total</td>${footCells}</tr>
-        </tfoot>
+          ${bodyRows}
+        </tbody>
+        <tfoot><tr><td class="member-col">Project total</td>${footCells}</tr></tfoot>
       </table></div>`;
       renderInternal();
     }
