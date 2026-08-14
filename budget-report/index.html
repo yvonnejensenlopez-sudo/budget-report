@@ -277,13 +277,6 @@
     table.matrix tbody tr.budget-mark td.member-col {
       background: #dbeafe;
     }
-    tr.budget-mark .need {
-      display: block;
-      margin-top: 2px;
-      font-weight: 600;
-      font-size: 0.75rem;
-      color: #1d4ed8;
-    }
     .ok { color: var(--ok); }
     .warn { color: var(--warn); }
     .danger { color: var(--danger); }
@@ -955,12 +948,7 @@
       }).join("");
 
       const quarterCells = projects.map((p) => {
-        const target = p.budget * 0.25;
-        const remaining = Math.max(0, target - p.totalHours);
-        const need = remaining > 0.005
-          ? `${fmt(remaining)} still needed`
-          : "25% reached";
-        return `<td class="cell">${fmt(target)}<span class="need">${need}</span></td>`;
+        return `<td class="cell">${fmt(p.budget * 0.25)}</td>`;
       }).join("");
 
       wrap.innerHTML = `<div class="scroll"><table class="matrix">
