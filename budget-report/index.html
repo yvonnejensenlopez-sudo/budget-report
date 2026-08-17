@@ -56,6 +56,10 @@
       cursor: pointer;
       border: 1px solid transparent;
     }
+    a.btn {
+      display: inline-block;
+      text-decoration: none;
+    }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-secondary {
       background: var(--surface);
@@ -416,6 +420,7 @@
       <h1>Project time vs budget</h1>
       <div class="actions">
         <button class="btn btn-secondary" type="button" id="manage-btn">Manage projects</button>
+        <a class="btn btn-secondary" href="/api/logout">Sign out</a>
         <div class="upload">
           <button class="btn btn-primary" type="button" id="upload-btn">Upload TopTracker CSV</button>
           <input id="csv-input" type="file" accept=".csv,text/csv" />
